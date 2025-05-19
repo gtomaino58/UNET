@@ -195,10 +195,24 @@ print(f"Num Workers: {num_workers}")
 transform = transforms.Compose([
     transforms.Resize((256, 256)),
     transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    #transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     #transforms.Lambda(lambda x: x * 255),  # Convertir a rango [0, 255]
     #transforms.Lambda(lambda x: x.type(torch.uint8)),  # Convertir a uint8
     #transforms.Lambda(lambda x: x / 255),  # Volver a normalizar a rango [0, 1]
+])
+
+# Hacemos data augmentation asegurandonos que la mascara y la imagen se transforman de la misma manera
+data_augmentation = transforms.Compose([
+    transforms.RandomHorizontalFlip(),
+    transforms.RandomVerticalFlip(),
+    transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.2),
+])  
+
+# Añadimos la data augmentation a la transformacion
+transform = transforms.Compose([
+    transforms.Resize((512, 512)),
+    data_augmentation,
+    transforms.ToTensor()
 ])
 
 # Creamos el dataset
