@@ -210,7 +210,7 @@ data_augmentation = transforms.Compose([
 
 # Añadimos la data augmentation a la transformacion
 transform = transforms.Compose([
-    transforms.Resize((512, 512)),
+    transforms.Resize((256, 256)),
     data_augmentation,
     transforms.ToTensor()
 ])
