@@ -207,8 +207,8 @@ dataset = FloodDataset(images_path=path_images, masks_path=path_masks, transform
 # Dividimos el dataset en train y test
 train_size = int(0.8 * len(dataset))
 test_size = len(dataset) - train_size
-train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
-#train_dataset, test_dataset = random_split(dataset, [train_size, test_size], generator=torch.Generator().manual_seed(1234))
+#train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
+train_dataset, test_dataset = random_split(dataset, [train_size, test_size], generator=torch.Generator().manual_seed(1234))
 
 # Creamos los dataloaders
 #train_loader = DataLoader(train_dataset, batch_size=Batch_Size, shuffle=True, num_workers=num_workers)
