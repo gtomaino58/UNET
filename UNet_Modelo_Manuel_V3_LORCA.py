@@ -1,25 +1,17 @@
 # Importamos todas las bibliotecas necesarias
 
-#import copy
 import os
 import random
-#import shutil
-#import zipfile
-#from math import atan2, cos, sin, sqrt, pi, log
 
-#import cv2
 import matplotlib.pyplot as plt
-#import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision.transforms as transforms
 from PIL import Image
-#from numpy import linalg as LA
 from torch import optim, nn
 from torch.utils.data import DataLoader, random_split
 from torch.utils.data.dataset import Dataset
-#from torchvision import transforms
 from tqdm import tqdm
 
 # Inicializamos el generador de numeros aleatorios
@@ -91,7 +83,6 @@ class UNet(torch.nn.Module):
         self.up4 = torch.utils.checkpoint(self.up4)
         self.outc = torch.utils.checkpoint(self.outc)
 
-
 class Down(torch.nn.Module):
     """Downscaling with maxpool then double conv"""
 
@@ -104,7 +95,6 @@ class Down(torch.nn.Module):
 
     def forward(self, x):
         return self.maxpool_conv(x)
-
 
 class Up(torch.nn.Module):
     """Upscaling then double conv"""
@@ -137,7 +127,6 @@ class Up(torch.nn.Module):
         x = torch.softmax(x, dim=1)
         return x
 
-
 class OutConv(torch.nn.Module):
     def __init__(self, in_channels, out_channels):
         super(OutConv, self).__init__()
@@ -154,8 +143,6 @@ print(output.size())
 # You should get torch.Size([1, 1, 512, 512]) as a result
 
 # Defino los path de las imagenes y las mascaras
-#path_images = 'C:/Users/gtoma/Master_AI_Aplicada/UEM_Master_AI_07042025/UEM_Trabajo/Sesiones_UEM/Manuel_Garcia_VISION/Actividad_2_UNet/data_flood/data/Image/'
-#path_masks = 'C:/Users/gtoma/Master_AI_Aplicada/UEM_Master_AI_07042025/UEM_Trabajo/Sesiones_UEM/Manuel_Garcia_VISION/Actividad_2_UNet/data_flood/data/Mask/'
 path_images = '/home/224F8578gianfranco/UNET/Image/'
 path_masks = '/home/224F8578gianfranco/UNET/Mask/'
 path_res = '/home/224F8578gianfranco/UNET/'
@@ -208,10 +195,10 @@ print(f"Num Workers: {num_workers}")
 transform = transforms.Compose([
     transforms.Resize((512, 512)),
     transforms.ToTensor(),
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-    transforms.Lambda(lambda x: x * 255),  # Convertir a rango [0, 255]
-    transforms.Lambda(lambda x: x.type(torch.uint8)),  # Convertir a uint8
-    transforms.Lambda(lambda x: x / 255),  # Volver a normalizar a rango [0, 1]
+    #transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    #transforms.Lambda(lambda x: x * 255),  # Convertir a rango [0, 255]
+    #transforms.Lambda(lambda x: x.type(torch.uint8)),  # Convertir a uint8
+    #transforms.Lambda(lambda x: x / 255),  # Volver a normalizar a rango [0, 1]
 ])
 
 # Creamos el dataset
