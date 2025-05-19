@@ -160,13 +160,22 @@ def bce_dice_loss(pred, target, bce_weight=0.5):
     dice = dice_loss(pred, target)
     return (bce * bce_weight) + (dice * (1 - bce_weight))
 
-# -------------------- Cálculo del IoU --------------------
-def iou_pytorch(pred, target):
-    pred = (pred > 0.5).float()
-    intersection = torch.logical_and(target, pred).sum((1, 2, 3))
-    union = torch.logical_or(target, pred).sum((1, 2, 3))
-    iou = (intersection + 1e-7) / (union + 1e-7)
-    return iou.mean()
+# -------------------- Cálculo de Métricas --------------------
+def calcular_metricas(pred, target):
+    pred_bin = (pred > 0.5).float()
+    tp = torch.logical_and(target == 1, pred_bin == 1).sum()
+    fp = torch.logical_and(target == 0, pred_bin == 1).sum()
+    fn = torch.logical_and(target == 1, pred_bin == 0).sum()
+    tn = torch.logical_and(target == 0, pred_bin == 0).sum()
+
+    precision = tp / (tp + fp + 1e-7)
+    recall = tp / (tp + fn + 1e-7)
+    f1 = 2 * (precision * recall) / (precision + recall + 1e-7)
+    accuracy = (tp + tn) / (tp + fp + fn + tn + 1e-7)
+    dice = 2 * tp / (2 * tp + fp + fn + 1e-7)
+    iou = tp / (tp + fp + fn + 1e-7)
+
+    return precision.item(), recall.item(), f1.item(), accuracy.item(), dice.item(), iou.item()
 
 # -------------------- Preparación de Datos y DataLoaders --------------------
 #img_dir = 'path/to/your/images'
@@ -175,7 +184,9 @@ def iou_pytorch(pred, target):
 # Defino los path de las imagenes y las mascaras
 img_dir = '/home/224F8578gianfranco/UNET/Image/'
 mask_dir = '/home/224F8578gianfranco/UNET/Mask/'
-res_dir = '/home/224F8578gianfranco/UNET/'
+output_dir = '/home/224F8578gianfranco/UNET/'
+
+os.makedirs(output_dir, exist_ok=True)
 
 # Transformaciones para entrenamiento con aumento de datos
 train_transforms = Compose([
@@ -222,6 +233,11 @@ epochs_no_improve = 0
 train_losses = []
 val_losses = []
 val_ious = []
+val_precisions = []
+val_recalls = []
+val_f1s = []
+val_accuracies = []
+val_dices = []
 
 for epoch in range(num_epochs):
     model.train()
@@ -249,7 +265,13 @@ for epoch in range(num_epochs):
     # Evaluación en el conjunto de validación
     model.eval()
     val_loss = 0
-    all_iou = []
+    all_precisions = []
+    all_recalls = []
+    all_f1s = []
+    all_accuracies = []
+    all_dices = []
+    all_ious = []
+
     with torch.no_grad():
         for images_val, masks_val in val_loader:
             images_val = images_val.to(device)
@@ -257,19 +279,36 @@ for epoch in range(num_epochs):
             outputs_val = model(images_val)
             loss_val = criterion(outputs_val, masks_val)
             val_loss += loss_val.item()
-            iou = iou_pytorch(outputs_val, masks_val)
-            all_iou.append(iou.item())
+
+            precision, recall, f1, accuracy, dice, iou = calcular_metricas(outputs_val, masks_val)
+            all_precisions.append(precision)
+            all_recalls.append(recall)
+            all_f1s.append(f1)
+            all_accuracies.append(accuracy)
+            all_dices.append(dice)
+            all_ious.append(iou)
 
     avg_val_loss = val_loss / len(val_loader)
-    avg_iou = np.mean(all_iou)
-    print(f'Epoch [{epoch+1}/{num_epochs}], Average Validation Loss: {avg_val_loss:.4f}, Average IoU: {avg_iou:.4f}')
+    avg_precision = np.mean(all_precisions)
+    avg_recall = np.mean(all_recalls)
+    avg_f1 = np.mean(all_f1s)
+    avg_accuracy = np.mean(all_accuracies)
+    avg_dice = np.mean(all_dices)
+    avg_iou = np.mean(all_ious)
+
+    print(f'Epoch [{epoch+1}/{num_epochs}], Average Validation Loss: {avg_val_loss:.4f}, Validation IoU: {avg_iou:.4f}, Precision: {avg_precision:.4f}, Recall: {avg_recall:.4f}, F1-Score: {avg_f1:.4f}, Accuracy: {avg_accuracy:.4f}, Dice: {avg_dice:.4f}')
     val_losses.append(avg_val_loss)
     val_ious.append(avg_iou)
+    val_precisions.append(avg_precision)
+    val_recalls.append(avg_recall)
+    val_f1s.append(avg_f1)
+    val_accuracies.append(avg_accuracy)
+    val_dices.append(avg_dice)
 
-    # Early stopping
+    # Early stopping (basado en la pérdida de validación)
     if avg_val_loss < best_val_loss:
         best_val_loss = avg_val_loss
-        torch.save(model.state_dict(), 'best_unet_inundacion.pth')
+        torch.save(model.state_dict(), output_dir + 'Gemini_best_unet_inundacion.pth')
         print('Modelo guardado (mejor validación)')
         epochs_no_improve = 0
     else:
@@ -281,21 +320,30 @@ for epoch in range(num_epochs):
 
 print('¡Entrenamiento finalizado!')
 
-# -------------------- Visualización de las Curvas --------------------
-plt.figure(figsize=(12, 4))
-plt.subplot(1, 2, 1)
+# -------------------- Visualización y Guardado de las Curvas --------------------
+plt.figure(figsize=(18, 6))
+
+plt.subplot(1, 3, 1)
 plt.plot(train_losses, label='Training Loss')
 plt.plot(val_losses, label='Validation Loss')
 plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.legend()
 plt.title('Loss vs. Epochs')
+plt.savefig(os.path.join(output_dir, 'Gemini_loss_vs_epochs.png'))
 
-plt.subplot(1, 2, 2)
+plt.subplot(1, 3, 2)
 plt.plot(val_ious, label='Validation IoU')
+plt.plot(val_f1s, label='Validation F1-Score')
+plt.plot(val_dices, label='Validation Dice')
 plt.xlabel('Epoch')
-plt.ylabel('IoU')
+plt.ylabel('Metric Value')
 plt.legend()
-plt.title('IoU vs. Epochs')
+plt.title('IoU, F1-Score, and Dice vs. Epochs')
+plt.savefig(os.path.join(output_dir, 'Gemini_iou_f1_dice_vs_epochs.png'))
 
-plt.show()
+plt.subplot(1, 3, 3)
+plt.plot(val_precisions, label='Validation Precision')
+plt.plot(val_recalls, label='Validation Recall')
+plt.plot(val_accuracies, label='Validation Accuracy')
+plt.xlabel
