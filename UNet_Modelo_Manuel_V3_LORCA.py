@@ -196,7 +196,7 @@ if device.type == 'cuda':
 # Definimos algunos hiperparametros
 Batch_Size = 8
 Learning_Rate = 0.00001 
-Num_Epochs = 25
+Num_Epochs = 100
 
 print("Hiperparametros:")
 print(f"Batch Size: {Batch_Size}")
@@ -205,11 +205,13 @@ print(f"Num Epochs: {Num_Epochs}")
 print(f"Device: {device}")
 print(f"Num Workers: {num_workers}")
 
-# Definimos las transformaciones
 transform = transforms.Compose([
-    transforms.Resize((128, 128)),
+    transforms.Resize((512, 512)),
     transforms.ToTensor(),
-    #transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    transforms.Lambda(lambda x: x * 255),  # Convertir a rango [0, 255]
+    transforms.Lambda(lambda x: x.type(torch.uint8)),  # Convertir a uint8
+    transforms.Lambda(lambda x: x / 255),  # Volver a normalizar a rango [0, 1]
 ])
 
 # Creamos el dataset
@@ -337,137 +339,3 @@ plt.title('IOU Score vs Epochs')
 plt.savefig(path_res + 'iou_vs_epochs.png')
 plt.show()
 
-# Vamos a guardar el modelo
-#torch.save(model.state_dict(), path_res + 'unet_model.pth')
-
-# Vamos a mostrar y guardar una imagen, la mascara y su prediccion
-def show_image(image, mask, pred_mask):
-    fig, ax = plt.subplots(1, 3, figsize=(12, 6))
-    ax[0].imshow(image.permute(1, 2, 0))
-    ax[0].set_title('Image')
-    ax[1].imshow(mask.permute(1, 2, 0), cmap='gray')
-    ax[1].set_title('Mask')
-    ax[2].imshow(pred_mask.permute(1, 2, 0), cmap='gray')
-    ax[2].set_title('Predicted Mask')
-    plt.show()
-
-# Mostramos la imagen, la mascara y su prediccion
-for images, masks in test_loader:
-    images = images.to(device)
-    masks = masks.to(device)
-
-    with torch.no_grad():
-        outputs = model(images)
-
-    # Convertimos la mascara predicha a la misma forma que la mascara original
-    pred_mask = torch.sigmoid(outputs[3])
-    pred_mask = (pred_mask > 0.5).float()
-
-    show_image(images[3].cpu(), masks[3].cpu(), pred_mask[3].cpu())
-    break
-
-# Guardamos la imagen, la mascara y su prediccion
-def save_image(image, mask, pred_mask, path):
-    fig, ax = plt.subplots(1, 3, figsize=(12, 6))
-    ax[0].imshow(image.permute(1, 2, 0))
-    ax[0].set_title('Image')
-    ax[1].imshow(mask.permute(1, 2, 0), cmap='gray')
-    ax[1].set_title('Mask')
-    ax[2].imshow(pred_mask.permute(1, 2, 0), cmap='gray')
-    ax[2].set_title('Predicted Mask')
-    plt.savefig(path)
-    plt.close()
-
-# Guardamos la imagen, la mascara y su prediccion
-for images, masks in test_loader:
-    images = images.to(device)
-    masks = masks.to(device)
-
-    with torch.no_grad():
-        outputs = model(images)
-
-    # Convertimos la mascara predicha a la misma forma que la mascara original
-    pred_mask = torch.sigmoid(outputs[3])
-    pred_mask = (pred_mask > 0.5).float()
-
-    save_image(images[3].cpu(), masks[3].cpu(), pred_mask[3].cpu(), path_res + 'image_mask_pred.png')
-    break
-
-# VAmos a mostrar la imagen y la mascara predicha superpuestas
-def show_overlay(image, mask, pred_mask):
-    fig, ax = plt.subplots(1, 2, figsize=(12, 6))
-    ax[0].imshow(image.permute(1, 2, 0))
-    ax[0].set_title('Image')
-    ax[0].imshow(mask.permute(1, 2, 0), alpha=0.5)
-    ax[0].set_title('Image and Mask Overlay')
-    ax[1].imshow(image.permute(1, 2, 0))
-    ax[1].set_title('Image')
-    ax[1].imshow(pred_mask.permute(1, 2, 0), alpha=0.5)
-    ax[1].set_title('Image and Predicted Mask Overlay')
-    plt.show()
-# Mostramos la imagen y la mascara predicha superpuestas
-for images, masks in test_loader:
-    images = images.to(device)
-    masks = masks.to(device)
-
-    with torch.no_grad():
-        outputs = model(images)
-
-    # Convertimos la mascara predicha a la misma forma que la mascara original
-    pred_mask = torch.sigmoid(outputs[3])
-    pred_mask = (pred_mask > 0.5).float()
-
-    show_overlay(images[3].cpu(), masks[3].cpu(), pred_mask[3].cpu())
-    break
-
-# Guardamos la imagen y la mascara predicha superpuestas
-def save_overlay(image, mask, pred_mask, path):
-    fig, ax = plt.subplots(1, 2, figsize=(12, 6))
-    ax[0].imshow(image.permute(1, 2, 0))
-    ax[0].set_title('Image')
-    ax[0].imshow(mask.permute(1, 2, 0), alpha=0.5)
-    ax[0].set_title('Image and Mask Overlay')
-    ax[1].imshow(image.permute(1, 2, 0))
-    ax[1].set_title('Image')
-    ax[1].imshow(pred_mask.permute(1, 2, 0), alpha=0.5)
-    ax[1].set_title('Image and Predicted Mask Overlay')
-    plt.savefig(path)
-    plt.close()
-# Guardamos la imagen y la mascara predicha superpuestas
-for images, masks in test_loader:
-    images = images.to(device)
-    masks = masks.to(device)
-
-    with torch.no_grad():
-        outputs = model(images)
-
-    # Convertimos la mascara predicha a la misma forma que la mascara original
-    pred_mask = torch.sigmoid(outputs[3])
-    pred_mask = (pred_mask > 0.5).float()
-
-    save_overlay(images[3].cpu(), masks[3].cpu(), pred_mask[3].cpu(), path_res + 'image_pred_overlay.png')
-    break
-
-# Mostramos y guardamos el histograma de los pixeles de la mascara predicha
-def show_histogram(mask, path):
-    plt.figure(figsize=(12, 5))
-    plt.hist(mask.numpy().flatten(), bins=256, range=(0, 1), density=True)
-    plt.xlabel('Pixel Value')
-    plt.ylabel('Frequency')
-    plt.title('Histogram of Predicted Mask')
-    plt.savefig(path)
-    plt.show()
-# Mostramos y guardamos el histograma de los pixeles de la mascara predicha
-for images, masks in test_loader:
-    images = images.to(device)
-    masks = masks.to(device)
-
-    with torch.no_grad():
-        outputs = model(images)
-
-    # Convertimos la mascara predicha a la misma forma que la mascara original
-    pred_mask = torch.sigmoid(outputs[3])
-    pred_mask = (pred_mask > 0.5).float()
-
-    show_histogram(pred_mask[3].cpu(), path_res + 'histogram_pred_mask.png')
-    break
