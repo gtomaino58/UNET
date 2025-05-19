@@ -182,7 +182,7 @@ if device.type == 'cuda':
 
 # Definimos algunos hiperparametros
 Batch_Size = 8
-Learning_Rate = 0.0000001 
+Learning_Rate = 0.00001
 Num_Epochs = 100
 
 print("Hiperparametros:")
@@ -195,7 +195,7 @@ print(f"Num Workers: {num_workers}")
 transform = transforms.Compose([
     transforms.Resize((256, 256)),
     transforms.ToTensor(),
-    #transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     #transforms.Lambda(lambda x: x * 255),  # Convertir a rango [0, 255]
     #transforms.Lambda(lambda x: x.type(torch.uint8)),  # Convertir a uint8
     #transforms.Lambda(lambda x: x / 255),  # Volver a normalizar a rango [0, 1]
@@ -219,25 +219,6 @@ test_loader = DataLoader(test_dataset, batch_size=Batch_Size, shuffle=False)
 # Vamos a mostrar el numero de batches
 print(f"Numero de batches de train: {len(train_loader)}")
 print(f"Numero de batches de test: {len(test_loader)}")
-
-# Visualizamos el dataset
-def show_batch(dl):
-    for images, masks in dl:
-        fig, ax = plt.subplots(1, 2, figsize=(12, 6))
-        ax[0].imshow(images[1].permute(1, 2, 0))
-        ax[0].set_title('Image')
-        ax[1].imshow(masks[1].permute(1, 2, 0), cmap='gray')
-        ax[1].set_title('Mask')
-        plt.show()
-        break
-
-# Visualizamos la primera imagen y mascara de train
-print("Visualizando la primera imagen y mascara de train")
-show_batch(train_loader)
-
-# Visualizamos la primera imagen y mascara de test
-print("Visualizando la primera imagen y mascara de test")
-show_batch(test_loader)
 
 # Definimos el modelo, el optimizador y la funcion de perdida y cargamos el modelo en la GPU
 model = UNet(n_channels=3, n_classes=1).to(device)
