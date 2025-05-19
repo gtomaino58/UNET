@@ -224,10 +224,10 @@ train_dataset, test_dataset = random_split(dataset, [train_size, test_size])
 #train_dataset, test_dataset = random_split(dataset, [train_size, test_size], generator=torch.Generator().manual_seed(1234))
 
 # Creamos los dataloaders
-train_loader = DataLoader(train_dataset, batch_size=Batch_Size, shuffle=True, num_workers=num_workers)
-test_loader = DataLoader(test_dataset, batch_size=Batch_Size, shuffle=False, num_workers=num_workers)
-#train_loader = DataLoader(train_dataset, batch_size=Batch_Size, shuffle=True)
-#test_loader = DataLoader(test_dataset, batch_size=Batch_Size, shuffle=False)
+#train_loader = DataLoader(train_dataset, batch_size=Batch_Size, shuffle=True, num_workers=num_workers)
+#test_loader = DataLoader(test_dataset, batch_size=Batch_Size, shuffle=False, num_workers=num_workers)
+train_loader = DataLoader(train_dataset, batch_size=Batch_Size, shuffle=True)
+test_loader = DataLoader(test_dataset, batch_size=Batch_Size, shuffle=False)
 
 # Vamos a mostrar el numero de batches
 print(f"Numero de batches de train: {len(train_loader)}")
