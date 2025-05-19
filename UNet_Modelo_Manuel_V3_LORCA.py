@@ -182,7 +182,7 @@ if device.type == 'cuda':
 
 # Definimos algunos hiperparametros
 Batch_Size = 8
-Learning_Rate = 0.00001 
+Learning_Rate = 0.001 
 Num_Epochs = 100
 
 print("Hiperparametros:")
